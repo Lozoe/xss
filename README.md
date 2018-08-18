@@ -7,14 +7,14 @@
 
 #### 2.运行：
 - `npm install`
-- `npm start`安装依赖
+- `npm start`
 
 #### 3.构建：
 - `npm install -g express`
 - `npm install -g express-generator`
 - `express -e --git -f ./`
 - `npm install`
--浏览器http://localhost:3000/
+- 浏览器http://localhost:3000/
 
 另： 
 - 查询字符串要通过encodeURIComponent()进行编码，然后才放到URL的末尾
