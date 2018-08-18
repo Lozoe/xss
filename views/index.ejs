@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    
+    <script src="/javascripts/domParse.js" charset="utf-8"></script>
+    <script src="/javascripts/encode.js" charset="utf-8"></script>
+    <script>
+      var parse = function(str) {
+        var results = '';
+        try {
+          //encode.js：可以使用https://github.com/mathiasbynens/he 中的he.js
+          //domParse：可以用楼上说的 https://github.com/blowsie/Pure-JavaScript-HTML5-Parser 中的htmlparser.js
+          //引用了domParse.js中的HTMLParse方法
+    			//1.解码（反转义），使用encode.js提供的he对象的方法unescape
+    			//2.对数据反转义后，再进行DOMParse 标签进行配对
+    			HTMLParser(he.unescape(str, {strict: true}),{
+    				//tag标签,attrs属性,unary单标签(比如img标签)还是配对标签
+    				start: function(tag, attrs, unary){
+    					//实行过滤操作
+    					// if(tag == 'script' || tag == 'style' || tag == 'link' || tag == 'frame' || tag == 'iframe' || tag == 'img') return;
+    					results += '<' + tag;
+    					
+    					//添加属性这部分也要过滤
+    					for(var i=0,len = attrs.length;i < len;i++) {
+    						results += " "+attrs[i].name + '="' + attrs[i].escaped + '"';
+    					}
+    					results += (unary?"/":"") + ">";
+    				},
+    				end: function(tag){
+    					results += "</" + tag + ">";
+    				},
+    				chars: function(text){
+    					results += text;
+    				},
+    				comment: function(text){
+    					results += "<!--" + text + "-->";
+    				}
+    			});
+    			return results;
+        } catch (error) {
+          console.log(error)
+        } finally {
+
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+    <textarea name="" cols="30" rows="10" id="txt"><p><img src='https://avatar-static.segmentfault.com/315/382/31538228-55e81611b2796_huge256' onerror="alert('img load error')" onclick="alert('img clicked')"></p></textarea>
+
+    <button id="btn">comment</button>
+    <button id="get">get comment</button>
+  </body>
+  <script>
+    var btn = document.getElementById('btn')
+    var get = document.getElementById('get')
+    var txt = document.getElementById('txt')
+    // 评论
+    btn.addEventListener('click', function() {
+      var xhr = new XMLHttpRequest();
+      var url = '/comment?comment=' + txt.value;
+      xhr.open('GET', url , true);
+      xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4) {
+          if(xhr.status == 200) {
+            console.log(xhr);
+          } else {
+            console.log('error');
+          }
+        }
+      };
+      xhr.send();
+    })
+
+    // 获取评论
+    get.addEventListener('click', function() {
+      var xhr = new XMLHttpRequest();
+      var url = '/getComment';
+      xhr.open('GET', url , true);
+      xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4) {
+          if(xhr.status == 200) {
+            //解码和校验
+            //解析服务端的响应内容（JSON字符串）
+            var com = parse(JSON.parse(xhr.response).comment);
+            // var com = JSON.parse(xhr.response).comment;
+            var txt = document.createElement('span');
+            txt.innerHTML = com;
+            document.body.appendChild(txt);
+          } else {
+            console.log('error');
+          }
+        }
+      };
+      xhr.send();
+    })
+
+    /* 解码 配对校验 */
+
+  </script>
+</html>
